@@ -1,8 +1,11 @@
 -- Filesystem things --
 
-local filesystem = {}
+kernel.filesystem = {}
+
+kernel.logger.log("initializing hierarchical VFS")
 
 do
+  local filesystem = {}
   local mtab       = {name = "/", proxy = component.filesystem, children = {}, not_unmountable = true}
   filesystem.fstab = {}
 
@@ -89,6 +92,8 @@ do
     end
     return true
   end
+
+  kernel.logger.log("setting up filesystem interfaces")
 
   function filesystem.canonical(path)
     checkArg(1, path, "string")
@@ -350,4 +355,8 @@ do
       return oldN.proxy.rename(oldP, newP)
     end
   end
+
+  kernel.filesystem = filesystem
 end
+
+kernel.logger.log("initialized VFS")

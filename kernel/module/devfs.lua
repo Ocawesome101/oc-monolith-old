@@ -3,7 +3,7 @@
 do
   local devfs = {
     label   = "devfs",
-    type    = "filesystem"
+    type    = "filesystem",
     address = component.address(),
     nodes   = {
       path     = "/",
@@ -197,5 +197,5 @@ do
     return nil, "filesystem is read-only"
   end
 
-  filesystem.mount(devfs, "/dev")
+  kernel.filesystem.mount(devfs, "/dev")
 end

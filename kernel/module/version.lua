@@ -8,3 +8,4 @@ local _VER      = "1.0.0"
 local _PATCH    = "0"
 local _NAME     = "oc"
 _G._OSVERSION   = ("%s version %s-%s-%s (%s) (%s) %s"):format(_KERNEL, _VER, _PATCH, _NAME, _USER, _COMPILER, _DATE)
+local _START    = computer.uptime()

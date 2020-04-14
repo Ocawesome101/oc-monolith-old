@@ -1,5 +1,7 @@
 -- Virtual devfs component --
 
+kernel.logger.log("Initializing device FS")
+
 do
   local devfs = {
     label   = "devfs",
@@ -196,6 +198,8 @@ do
   function devfs.setLabel()
     return nil, "filesystem is read-only"
   end
+
+  kernel.logger.log("Mounting devfs at /dev")
 
   kernel.filesystem.mount(devfs, "/dev")
 end

@@ -4,13 +4,14 @@
 -- Kernel version --
 
 local _KERNEL   = "Monolith"
-local _DATE     = "Mon Apr 13 01:24:13 EDT 2020"
+local _DATE     = "Mon Apr 13 16:49:21 EDT 2020"
 local _COMPILER = "luacomp " .. "1.2.0"
 local _USER     = "ocawesome101" .. "@" .. "manjaro-pbp"
 local _VER      = "1.0.0"
 local _PATCH    = "0"
 local _NAME     = "oc"
 _G._OSVERSION   = ("%s version %s-%s-%s (%s) (%s) %s"):format(_KERNEL, _VER, _PATCH, _NAME, _USER, _COMPILER, _DATE)
+local _START    = computer.uptime()
 
 
 -- Initial component setup --
@@ -67,8 +68,9 @@ if component.gpu and component.screen then
   end
   y, w, h = 1, component.gpu.maxResolution()
   component.gpu.setResolution(w, h)
+  component.gpu.fill(1, 1, w, h, " ")
   function kernel.logger.log(...)
-    local str = table.concat({...}, " ")
+    local str = table.concat({string.format("[%08f]", computer.uptime() - _START), ...}, " ")
     component.gpu.set(1, y, str)
     if y == h then
       component.gpu.copy(1, 1, w, h, 0, -1)
@@ -143,7 +145,7 @@ kernel.logger.log("Memory: " .. computer.freeMemory() // 1024 .. "K/" .. compute
 
 kernel.filesystem = {}
 
-kernel.logger.log("initializing hierarchical VFS")
+kernel.logger.log("Initializing hierarchical VFS")
 
 do
   local filesystem = {}
@@ -175,6 +177,9 @@ do
     local parents = {}
     local current = mtab
     local index   = 1
+    if mtab.proxy.exists(path) then
+      return mtab, path
+    end
     while index <= #parts do
       local part = parts[index]
       if current.children[part] then
@@ -500,10 +505,12 @@ do
   kernel.filesystem = filesystem
 end
 
-kernel.logger.log("initialized VFS")
+kernel.logger.log("Initialized VFS")
 
 
 -- Virtual devfs component --
+
+kernel.logger.log("Initializing device FS")
 
 do
   local devfs = {
@@ -702,14 +709,21 @@ do
     return nil, "filesystem is read-only"
   end
 
+  kernel.logger.log("Mounting devfs at /dev")
+
   kernel.filesystem.mount(devfs, "/dev")
 end
 
 
 -- TODO: Implement a sysfs
 
+kernel.logger.log("Skipping sysfs: Not implemented")
+
 
 -- Task scheduler --
+
+kernel.logger.log("Initializing task scheduler")
+
 do
   local threads = {}
   local cur     = 0
@@ -834,8 +848,20 @@ do
     return cur
   end
 
+  function os.find(name)
+    checkArg(1, name, "string")
+    for pid, thread in pairs(threads) do
+      if thread.name == name then
+        return pid
+      end
+    end
+
+    return nil, "thread not found"
+  end
+
   function os.start()
     os.start = nil
+    kernel.logger.log("Starting scheduler")
     while true do
       local torun = {}
       for pid, thread in pairs(threads) do
@@ -876,8 +902,12 @@ do
   end
 end
 
+kernel.logger.log("Scheduler initialized")
+
 
 -- procfs
+
+kernel.logger.log("Initializing process FS")
 
 do
   local files = {
@@ -1080,11 +1110,15 @@ do
 
   kernel.procfs = procfs
 
+  kernel.logger.log("Mounting procfs at /proc")
+
   kernel.filesystem.mount(procfs, "/proc")
 end
 
 
 -- uuuuuuuuuuuuusersoaaaaaaaaaaace
+
+kernel.logger.log("Setting up userspace sandbox")
 
 local userspace = {
   _VERSION = _VERSION,
@@ -1122,8 +1156,10 @@ local userspace = {
     compiledby = _USER,
     version    = _VER,
     patch      = _PATCH,
-    variation  = _NAME
+    variation  = _NAME,
+    starttime  = _START
   },
+  logger       = kernel.logger,
   os           = setmetatable({}, { __index = os }),
   string       = setmetatable({}, { __index = string }),
   math         = setmetatable({}, { __index = math }),
@@ -1132,9 +1168,11 @@ local userspace = {
   table        = setmetatable({}, { __index = table }),
   unicode      = setmetatable({}, { __index = unicode }),
   component    = component,
-  filesystem   = filesystem,
+  filesystem   = kernel.filesystem,
   coroutine    = setmetatable({}, { __index = coroutine })
 }
+
+kernel.logger.log("Loading init from /sbin/init.lua")
 
 local function loadfile(file, mode, env)
   checkArg(1, file, "string")
@@ -1159,8 +1197,8 @@ userspace.loadfile = loadfile
 userspace._G = userspace
 
 local ok, err = loadfile("/sbin/init.lua", nil, userspace)
-if not ok then kernel.logger.panic(err) end
+if not ok then kernel.logger.panic("failed loading init: " .. err) end
 
-os.spawn(ok, "/sbin/init.lua", kernel.logger.panic, {interrupt = true}, {}, "root")
+os.spawn(ok, "/sbin/init.lua", function(err)kernel.logger.panic("attempted to kill init! " .. err)end, {interrupt = true}, {}, "root")
 os.start()
 

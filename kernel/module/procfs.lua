@@ -1,5 +1,7 @@
 -- procfs
 
+kernel.logger.log("Initializing process FS")
+
 do
   local files = {
     path     = "/",
@@ -200,6 +202,8 @@ do
   end
 
   kernel.procfs = procfs
+
+  kernel.logger.log("Mounting procfs at /proc")
 
   kernel.filesystem.mount(procfs, "/proc")
 end

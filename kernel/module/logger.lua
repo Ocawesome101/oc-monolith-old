@@ -11,8 +11,9 @@ if component.gpu and component.screen then
   end
   y, w, h = 1, component.gpu.maxResolution()
   component.gpu.setResolution(w, h)
+  component.gpu.fill(1, 1, w, h, " ")
   function kernel.logger.log(...)
-    local str = table.concat({...}, " ")
+    local str = table.concat({string.format("[%08f]", computer.uptime() - _START), ...}, " ")
     component.gpu.set(1, y, str)
     if y == h then
       component.gpu.copy(1, 1, w, h, 0, -1)

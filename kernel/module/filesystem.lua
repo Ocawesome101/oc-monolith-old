@@ -2,7 +2,7 @@
 
 kernel.filesystem = {}
 
-kernel.logger.log("initializing hierarchical VFS")
+kernel.logger.log("Initializing hierarchical VFS")
 
 do
   local filesystem = {}
@@ -34,6 +34,9 @@ do
     local parents = {}
     local current = mtab
     local index   = 1
+    if mtab.proxy.exists(path) then
+      return mtab, path
+    end
     while index <= #parts do
       local part = parts[index]
       if current.children[part] then
@@ -93,7 +96,7 @@ do
     return true
   end
 
-  kernel.logger.log("setting up filesystem interfaces")
+  kernel.logger.log("Setting up filesystem interfaces")
 
   function filesystem.canonical(path)
     checkArg(1, path, "string")
@@ -359,4 +362,4 @@ do
   kernel.filesystem = filesystem
 end
 
-kernel.logger.log("initialized VFS")
+kernel.logger.log("Initialized VFS")

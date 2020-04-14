@@ -1,4 +1,7 @@
 -- Task scheduler --
+
+kernel.logger.log("Initializing task scheduler")
+
 do
   local threads = {}
   local cur     = 0
@@ -123,8 +126,20 @@ do
     return cur
   end
 
+  function os.find(name)
+    checkArg(1, name, "string")
+    for pid, thread in pairs(threads) do
+      if thread.name == name then
+        return pid
+      end
+    end
+
+    return nil, "thread not found"
+  end
+
   function os.start()
     os.start = nil
+    kernel.logger.log("Starting scheduler")
     while true do
       local torun = {}
       for pid, thread in pairs(threads) do
@@ -164,3 +179,5 @@ do
     end
   end
 end
+
+kernel.logger.log("Scheduler initialized")

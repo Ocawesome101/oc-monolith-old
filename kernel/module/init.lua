@@ -1,5 +1,7 @@
 -- uuuuuuuuuuuuusersoaaaaaaaaaaace
 
+kernel.logger.log("Setting up userspace sandbox")
+
 local userspace = {
   _VERSION = _VERSION,
   _OSVERSION = _OSVERSION,
@@ -36,8 +38,10 @@ local userspace = {
     compiledby = _USER,
     version    = _VER,
     patch      = _PATCH,
-    variation  = _NAME
+    variation  = _NAME,
+    starttime  = _START
   },
+  logger       = kernel.logger,
   os           = setmetatable({}, { __index = os }),
   string       = setmetatable({}, { __index = string }),
   math         = setmetatable({}, { __index = math }),
@@ -46,9 +50,11 @@ local userspace = {
   table        = setmetatable({}, { __index = table }),
   unicode      = setmetatable({}, { __index = unicode }),
   component    = component,
-  filesystem   = filesystem,
+  filesystem   = kernel.filesystem,
   coroutine    = setmetatable({}, { __index = coroutine })
 }
+
+kernel.logger.log("Loading init from /sbin/init.lua")
 
 local function loadfile(file, mode, env)
   checkArg(1, file, "string")
@@ -73,7 +79,7 @@ userspace.loadfile = loadfile
 userspace._G = userspace
 
 local ok, err = loadfile("/sbin/init.lua", nil, userspace)
-if not ok then kernel.logger.panic(err) end
+if not ok then kernel.logger.panic("failed loading init: " .. err) end
 
-os.spawn(ok, "/sbin/init.lua", kernel.logger.panic, {interrupt = true}, {}, "root")
+os.spawn(ok, "/sbin/init.lua", function(err)kernel.logger.panic("attempted to kill init! " .. err)end, {interrupt = true}, {}, "root")
 os.start()

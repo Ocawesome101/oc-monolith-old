@@ -11,7 +11,7 @@ do
   local function endCycle()
     local dead = {}
     for pid, thread in pairs(threads) do
-      if thread.dead or threads[thread.parent].dead or coroutine.status(thread.coro) == "dead" or coroutine.status(threads[thread.parent].coro) == "dead" then
+      if thread.dead or (threads[thread.parent] and threads[thread.parent].dead) or coroutine.status(thread.coro) == "dead" or (threads[thread.parent] and coroutine.status(threads[thread.parent].coro) == "dead") then
         dead[#dead + 1] = pid
       end
     end
@@ -46,18 +46,20 @@ do
   local function handle(err, pid)
     local handler, kill = getHandler(pid)
     handler(err)
-    os.kill(kill)
+    os.kill(kill or pid)
   end
 
   local PROCESS_ENV = {}
 
-  function os.spawn(func, name, handler, blacklist, env, owner)
+  function os.spawn(func, name, handler, blacklist, env, owner, stdin, stdout)
     checkArg(1, func,      "function")
     checkArg(2, name,      "string")
     checkArg(3, handler,   "function", "nil")
     checkArg(4, blacklist, "table",    "nil")
     checkArg(5, env,       "table",    "nil")
     checkArg(6, owner,     "string",   "nil")
+    checkArg(7, stdin,     "table",    "nil")
+    checkArg(8, stdout,    "table",    "nil")
     env = setmetatable(env or {}, { __index = PROCESS_ENV })
     local new = {
       coro      = coroutine.create(func),
@@ -125,6 +127,10 @@ do
   function os.pid()
     return cur
   end
+  
+  function os.stdio()
+    return threads[cur].stdin, threads[cur].stdout
+  end
 
   function os.find(name)
     checkArg(1, name, "string")
@@ -147,8 +153,6 @@ do
           torun[pid] = thread
         end
       end
-
-      table.sort(torun)
 
       local sig = {}
       if #signals > 0 then
@@ -175,8 +179,9 @@ do
           end
         end
       end
-      kernel.logger.panic("all tasks exited")
+      endCycle()
     end
+    kernel.logger.panic("all tasks exited")
   end
 end
 

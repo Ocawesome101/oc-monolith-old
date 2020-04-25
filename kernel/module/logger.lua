@@ -39,20 +39,20 @@ function kernel.logger.panic(err, lvl) -- kernel panics
     if not info then break end
     writeinfo("  " .. level .. ":")
     kernel.logger.log("  At", info.what, info.namewhat, info.short_src)
-    writeinfo("    name: " .. info.short_src)
+    writeinfo("    name: " .. (info.name or info.short_src))
     local attributes = {
-      "what=" .. info.what,
-      "type=" .. info.namewhat,
-      "src=" .. info.source:gsub("=", "")
+      "what: " .. info.what,
+      "type: " .. info.namewhat,
+      "src: " .. info.source:gsub("=", "")
     }
     if attributes[2] == "" then
       attributes[2] = "<main chunk>"
     end
     if info.currentline > 0 then
-      attributes[#attributes + 1] = "line=" .. info.currentline
+      attributes[#attributes + 1] = "line " .. info.currentline
     end
     if info.linedefined > 0 then
-      attributes[#attributes + 1] = "defined=" .. info.linedefined
+      attributes[#attributes + 1] = "defined " .. info.linedefined
     end
     if info.istailcall then
       attributes[#attributes + 1] = "is tail call"

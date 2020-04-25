@@ -3,7 +3,7 @@
 --#include "module/version.lua"
 --#include "module/components.lua"
 --#include "module/logger.lua"
-kernel.logger.log("Booting Linux on physical CPU 0x893fc8d [" .. _VERSION .. "]")
+kernel.logger.log("Booting", _KERNEL, "on physical CPU 0x893fc8d [" .. _VERSION .. "]")
 kernel.logger.log(_OSVERSION)
 kernel.logger.log("Machine model: MightyPirates GmbH & Co. KG Blocker")
 kernel.logger.log("Memory: " .. computer.freeMemory() // 1024 .. "K/" .. computer.totalMemory() // 1024 .. "K free")

@@ -33,6 +33,7 @@ local function canAccess(file)
   file = filesystem.canonical(file)
   for i=1, #protected, 1 do
     if file:sub(1, #protected[i]) == protected[i] then
+      error(file .. ": permission denied")
       yes = false
       break
     end

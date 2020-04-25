@@ -13,12 +13,14 @@ package.loaded = {
   ["string"] = string,
   ["math"] = math,
   ["bit32"] = bit32,
+  ["component"] = component,
   ["computer"] = computer,
   ["unicode"] = unicode,
-  ["coroutine"] = coroutine
+  ["coroutine"] = coroutine,
+  ["filesystem"] = filesystem,
 }
 
-_G.component, _G.computer, _G.unicode = nil, nil, nil
+_G.component, _G.computer, _G.unicode, _G.filesystem = nil, nil, nil, nil
 
 local function genLibError(p, n)
   local err = "module '%s' not found:\n\tNo field package.loaded['%s']\n"

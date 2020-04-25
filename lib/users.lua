@@ -1,7 +1,7 @@
 -- User system --
 
 local users = {}
-local fs = filesystem
+local fs = require("filesystem")
 local protect = require("protection")
 local sha = require("sha3")
 
@@ -35,6 +35,24 @@ end
 
 local passwd = {}
 
+local handle, err = fs.open("/etc/passwd", "r")
+if not handle then
+  error(err)
+end
+do
+  local pswd = ""
+  repeat
+    local chunk = handle:read(math.huge)
+    pswd = pswd .. (chunk or "")
+  until not chunk
+  handle:close()
+  local ok, err = load("return " .. pswd, "=/etc/passwd", "bt", {})
+  if not ok then
+    error(err)
+  end
+  pswd = ok()
+end
+
 local function save()
   local out, err = fs.open("/etc/passwd", "w")
   if not out then
@@ -54,9 +72,9 @@ local function hex(bytes)
   return r
 end
 
-function users.login(user)
+function users.login(user, pwd)
   checkArg(1, user, "string")
-  local pwd = term.read({replace = "*"}):sub(1, -2)
+  checkArg(2, pwd, "string")
   pwd = hex(sha3.sha256(pwd))
   for i=1, #passwd, 1 do
     if passwd[i].name == user and passwd[i].password == pwd then

@@ -1,14 +1,20 @@
-============================ crash 14/04/20 01:47:03 ============================
-Kernel panic! error in /etc/init.d/io.lua: no such file or directory
-Kernel version: Monolith version 1.0.0-0-oc (ocawesome101@manjaro-pbp) (luacomp 1.2.0) Mon Apr 13 16:49:21 EDT 2020
+============================ crash 20/04/20 23:25:52 ============================
+Kernel panic! error in /etc/init.d/01_filesystem.lua: /sbin/init.lua:13: stack traceback:
+	/sbin/init.lua:13: in global 'error'
+	/etc/init.d/00_package.lua:75: in global 'require'
+	/etc/init.d/01_filesystem.lua:3: in main chunk
+	[C]: in function 'pcall'
+	[string "machine.lua"]:750: in global 'pcall'
+	/sbin/init.lua:47: in main chunk
+Kernel version: Monolith version 1.0.0-0-oc (ocawesome101@manjaro-pbp) (luacomp 1.2.0) Fri Apr 17 01:44:32 EDT 2020
   1:
-    name: [string "machine.lua"]
-    attributes: what=Lua, type=field, src=machine.lua, line=973, defined=972, is vararg
+    name: getinfo
+    attributes: what=Lua, type=field, src=machine.lua, line 973, defined 972, is vararg
   2:
-    name: /boot/kernel.lua
-    attributes: what=Lua, type=field, src=/boot/kernel.lua, line=95, defined=83
+    name: panic
+    attributes: what=Lua, type=field, src=/boot/kernel.lua, line 95, defined 83
   3:
     name: /sbin/init.lua
-    attributes: what=main, type=, src=/sbin/init.lua, line=31, is vararg
+    attributes: what=main, type=, src=/sbin/init.lua, line 49, is vararg
 Detailed traceback written to /crash.txt
 ================================================================================

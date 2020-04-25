@@ -4,7 +4,7 @@
 -- Kernel version --
 
 local _KERNEL   = "Monolith"
-local _DATE     = "Mon Apr 13 16:49:21 EDT 2020"
+local _DATE     = "Fri Apr 17 01:44:32 EDT 2020"
 local _COMPILER = "luacomp " .. "1.2.0"
 local _USER     = "ocawesome101" .. "@" .. "manjaro-pbp"
 local _VER      = "1.0.0"
@@ -96,7 +96,7 @@ function kernel.logger.panic(err, lvl) -- kernel panics
     if not info then break end
     writeinfo("  " .. level .. ":")
     kernel.logger.log("  At", info.what, info.namewhat, info.short_src)
-    writeinfo("    name: " .. info.short_src)
+    writeinfo("    name: " .. (info.name or info.short_src))
     local attributes = {
       "what=" .. info.what,
       "type=" .. info.namewhat,
@@ -106,10 +106,10 @@ function kernel.logger.panic(err, lvl) -- kernel panics
       attributes[2] = "<main chunk>"
     end
     if info.currentline > 0 then
-      attributes[#attributes + 1] = "line=" .. info.currentline
+      attributes[#attributes + 1] = "line " .. info.currentline
     end
     if info.linedefined > 0 then
-      attributes[#attributes + 1] = "defined=" .. info.linedefined
+      attributes[#attributes + 1] = "defined " .. info.linedefined
     end
     if info.istailcall then
       attributes[#attributes + 1] = "is tail call"
@@ -136,7 +136,7 @@ end
 local old_error = error
 _G.error = kernel.logger.panic -- for now, error == kernel panic
 
-kernel.logger.log("Booting Linux on physical CPU 0x893fc8d [" .. _VERSION .. "]")
+kernel.logger.log("Booting", _KERNEL, "on physical CPU 0x893fc8d [" .. _VERSION .. "]")
 kernel.logger.log(_OSVERSION)
 kernel.logger.log("Machine model: MightyPirates GmbH & Co. KG Blocker")
 kernel.logger.log("Memory: " .. computer.freeMemory() // 1024 .. "K/" .. computer.totalMemory() // 1024 .. "K free")
@@ -239,7 +239,7 @@ do
     return true
   end
 
-  kernel.logger.log("setting up filesystem interfaces")
+  kernel.logger.log("Setting up filesystem interfaces")
 
   function filesystem.canonical(path)
     checkArg(1, path, "string")
@@ -733,7 +733,7 @@ do
   local function endCycle()
     local dead = {}
     for pid, thread in pairs(threads) do
-      if thread.dead or threads[thread.parent].dead or coroutine.status(thread.coro) == "dead" or coroutine.status(threads[thread.parent].coro) == "dead" then
+      if thread.dead or (threads[thread.parent] and threads[thread.parent].dead) or coroutine.status(thread.coro) == "dead" or (threads[thread.parent] and coroutine.status(threads[thread.parent].coro) == "dead") then
         dead[#dead + 1] = pid
       end
     end
@@ -768,18 +768,20 @@ do
   local function handle(err, pid)
     local handler, kill = getHandler(pid)
     handler(err)
-    os.kill(kill)
+    os.kill(kill or pid)
   end
 
   local PROCESS_ENV = {}
 
-  function os.spawn(func, name, handler, blacklist, env, owner)
+  function os.spawn(func, name, handler, blacklist, env, owner, stdin, stdout)
     checkArg(1, func,      "function")
     checkArg(2, name,      "string")
     checkArg(3, handler,   "function", "nil")
     checkArg(4, blacklist, "table",    "nil")
     checkArg(5, env,       "table",    "nil")
     checkArg(6, owner,     "string",   "nil")
+    checkArg(7, stdin,     "table",    "nil")
+    checkArg(8, stdout,    "table",    "nil")
     env = setmetatable(env or {}, { __index = PROCESS_ENV })
     local new = {
       coro      = coroutine.create(func),
@@ -870,8 +872,6 @@ do
         end
       end
 
-      table.sort(torun)
-
       local sig = {}
       if #signals > 0 then
         sig = table.remove(signals, 1)
@@ -897,8 +897,9 @@ do
           end
         end
       end
-      kernel.logger.panic("all tasks exited")
+      endCycle()
     end
+    kernel.logger.panic("all tasks exited")
   end
 end
 
@@ -1134,7 +1135,7 @@ local userspace = {
   setmetatable = setmetatable,
   getmetatable = getmetatable,
   assert       = assert,
-  error        = old_error,
+  error        = old_error,--function(e,l)old_error(debug.traceback(e,l),l)end,
   ipairs       = ipairs,
   pairs        = pairs,
   type         = type,

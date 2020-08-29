@@ -43,6 +43,7 @@ function rk.read(amount)
 end
 
 local function key(evt, addr, char, code)
+  io.write("KEY")
   if char >= 32 and char <= 126 then
     buffer = buffer .. string.char(char)
     io.write(string.char(char))

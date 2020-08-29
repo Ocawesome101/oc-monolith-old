@@ -12,7 +12,7 @@ if component.gpu and component.screen then
   y, w, h = 1, component.gpu.maxResolution()
   component.gpu.setResolution(w, h)
   component.gpu.fill(1, 1, w, h, " ")
-  function kernel.logger.log(...)
+  local function log(...)
     local str = table.concat({string.format("[%08f]", computer.uptime() - _START), ...}, " ")
     component.gpu.set(1, y, str)
     if y == h then
@@ -20,6 +20,12 @@ if component.gpu and component.screen then
       component.gpu.fill(1, h, w, 1, " ")
     else
       y = y + 1
+    end
+  end
+  function kernel.logger.log(...)
+    local str = table.concat({...}, " ")
+    for line in str:gmatch("[^\n]+") do
+      log(line)
     end
   end
 end

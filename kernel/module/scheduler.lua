@@ -11,7 +11,8 @@ do
   local function endCycle()
     local dead = {}
     for pid, thread in pairs(threads) do
-      if thread.dead or (threads[thread.parent] and threads[thread.parent].dead) or coroutine.status(thread.coro) == "dead" or (threads[thread.parent] and coroutine.status(threads[thread.parent].coro) == "dead") then
+      if thread.dead or coroutine.status(thread.coro) == "dead" then
+        kernel.logger.log("thread died: " .. thread.name)
         dead[#dead + 1] = pid
       end
     end
@@ -62,7 +63,7 @@ do
     checkArg(8, stdout,    "table",    "nil")
     env = setmetatable(env or {}, { __index = PROCESS_ENV })
     local new = {
-      coro      = coroutine.create(func),
+      coro      = coroutine.create(function()return xpcall(func, debug.traceback)end),
       name      = name,
       handler   = handler,
       blacklist = blacklist or {},
@@ -164,13 +165,14 @@ do
         cur = pid
         if #thread.ipc > 0 then
           local ipc = table.remove(thread.ipc, 1)
-          ret = {coroutine.resume(thread.coro, "ipc", ipc.from, table.unpack(ipc.data))}
+          ret = table.pack(coroutine.resume(thread.coro, "ipc", ipc.from, table.unpack(ipc.data)))
         elseif #sig > 0 and not thread.blacklist[sig[1]] then
-          ret = {coroutine.resume(thread.coro, table.unpack(sig))}
+          ret = table.pack(coroutine.resume(thread.coro, table.unpack(sig)))
         else
-          ret = {coroutine.resume(thread.coro)}
+          ret = table.pack(coroutine.resume(thread.coro))
         end
 
+        kernel.logger.log(tostring(thread.name), tostring(ret[1]), tostring(ret[2]), tostring(ret[3]))
         if ret[2] then
           if not ret[1] then
             handle(ret[2], cur)

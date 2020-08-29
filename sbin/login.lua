@@ -3,10 +3,10 @@
 io.write("\27[2J")
 print("This is the Monolith system. Welcome.")
 
-local users = require("users")
+local users = pcall(require, "users")
 
 while true do
-  io.write("localhost login: ")
+  io.write("localhost login: \27[0m")
 
   local rk = require("readkey")
   local name = rk.read()

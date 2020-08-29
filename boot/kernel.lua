@@ -4,7 +4,7 @@
 -- Kernel version --
 
 local _KERNEL   = "Monolith"
-local _DATE     = "Fri Apr 17 01:44:32 EDT 2020"
+local _DATE     = "Sat Aug 29 00:51:42 EDT 2020"
 local _COMPILER = "luacomp " .. "1.2.0"
 local _USER     = "ocawesome101" .. "@" .. "manjaro-pbp"
 local _VER      = "1.0.0"
@@ -69,7 +69,7 @@ if component.gpu and component.screen then
   y, w, h = 1, component.gpu.maxResolution()
   component.gpu.setResolution(w, h)
   component.gpu.fill(1, 1, w, h, " ")
-  function kernel.logger.log(...)
+  local function log(...)
     local str = table.concat({string.format("[%08f]", computer.uptime() - _START), ...}, " ")
     component.gpu.set(1, y, str)
     if y == h then
@@ -77,6 +77,12 @@ if component.gpu and component.screen then
       component.gpu.fill(1, h, w, 1, " ")
     else
       y = y + 1
+    end
+  end
+  function kernel.logger.log(...)
+    local str = table.concat({...}, " ")
+    for line in str:gmatch("[^\n]+") do
+      log(line)
     end
   end
 end
@@ -98,9 +104,9 @@ function kernel.logger.panic(err, lvl) -- kernel panics
     kernel.logger.log("  At", info.what, info.namewhat, info.short_src)
     writeinfo("    name: " .. (info.name or info.short_src))
     local attributes = {
-      "what=" .. info.what,
-      "type=" .. info.namewhat,
-      "src=" .. info.source:gsub("=", "")
+      "what: " .. info.what,
+      "type: " .. info.namewhat,
+      "src: " .. info.source:gsub("=", "")
     }
     if attributes[2] == "" then
       attributes[2] = "<main chunk>"
@@ -733,7 +739,8 @@ do
   local function endCycle()
     local dead = {}
     for pid, thread in pairs(threads) do
-      if thread.dead or (threads[thread.parent] and threads[thread.parent].dead) or coroutine.status(thread.coro) == "dead" or (threads[thread.parent] and coroutine.status(threads[thread.parent].coro) == "dead") then
+      if thread.dead or coroutine.status(thread.coro) == "dead" then
+        kernel.logger.log("thread died: " .. thread.name)
         dead[#dead + 1] = pid
       end
     end
@@ -784,7 +791,7 @@ do
     checkArg(8, stdout,    "table",    "nil")
     env = setmetatable(env or {}, { __index = PROCESS_ENV })
     local new = {
-      coro      = coroutine.create(func),
+      coro      = coroutine.create(function()return xpcall(func, debug.traceback)end),
       name      = name,
       handler   = handler,
       blacklist = blacklist or {},
@@ -849,6 +856,10 @@ do
   function os.pid()
     return cur
   end
+  
+  function os.stdio()
+    return threads[cur].stdin, threads[cur].stdout
+  end
 
   function os.find(name)
     checkArg(1, name, "string")
@@ -882,13 +893,14 @@ do
         cur = pid
         if #thread.ipc > 0 then
           local ipc = table.remove(thread.ipc, 1)
-          ret = {coroutine.resume(thread.coro, "ipc", ipc.from, table.unpack(ipc.data))}
+          ret = table.pack(coroutine.resume(thread.coro, "ipc", ipc.from, table.unpack(ipc.data)))
         elseif #sig > 0 and not thread.blacklist[sig[1]] then
-          ret = {coroutine.resume(thread.coro, table.unpack(sig))}
+          ret = table.pack(coroutine.resume(thread.coro, table.unpack(sig)))
         else
-          ret = {coroutine.resume(thread.coro)}
+          ret = table.pack(coroutine.resume(thread.coro))
         end
 
+        kernel.logger.log(tostring(thread.name), tostring(ret[1]), tostring(ret[2]), tostring(ret[3]))
         if ret[2] then
           if not ret[1] then
             handle(ret[2], cur)
@@ -1135,7 +1147,7 @@ local userspace = {
   setmetatable = setmetatable,
   getmetatable = getmetatable,
   assert       = assert,
-  error        = old_error,--function(e,l)old_error(debug.traceback(e,l),l)end,
+  error        = old_error,
   ipairs       = ipairs,
   pairs        = pairs,
   type         = type,

@@ -1,4 +1,4 @@
-============================ crash 20/04/20 23:25:52 ============================
+=================================================================== crash 15/05/20 00:21:39 ===================================================================
 Kernel panic! error in /etc/init.d/01_filesystem.lua: /sbin/init.lua:13: stack traceback:
 	/sbin/init.lua:13: in global 'error'
 	/etc/init.d/00_package.lua:75: in global 'require'
@@ -6,15 +6,15 @@ Kernel panic! error in /etc/init.d/01_filesystem.lua: /sbin/init.lua:13: stack t
 	[C]: in function 'pcall'
 	[string "machine.lua"]:750: in global 'pcall'
 	/sbin/init.lua:47: in main chunk
-Kernel version: Monolith version 1.0.0-0-oc (ocawesome101@manjaro-pbp) (luacomp 1.2.0) Fri Apr 17 01:44:32 EDT 2020
+Kernel version: Monolith version 1.0.0-0-oc (ocawesome101@manjaro-pbp) (luacomp 1.2.0) Fri May 15 00:21:29 EDT 2020
   1:
     name: getinfo
-    attributes: what=Lua, type=field, src=machine.lua, line 973, defined 972, is vararg
+    attributes: what: Lua, type: field, src: machine.lua, line 973, defined 972, is vararg
   2:
     name: panic
-    attributes: what=Lua, type=field, src=/boot/kernel.lua, line 95, defined 83
+    attributes: what: Lua, type: field, src: /boot/kernel.lua, line 101, defined 89
   3:
     name: /sbin/init.lua
-    attributes: what=main, type=, src=/sbin/init.lua, line 49, is vararg
+    attributes: what: main, type: , src: /sbin/init.lua, line 49, is vararg
 Detailed traceback written to /crash.txt
-================================================================================
+===============================================================================================================================================================

@@ -9,9 +9,9 @@ local computer   = computer
 local filesystem = filesystem
 local olderr     = error
 
-function _G.error(e,l)
+--[[function _G.error(e,l)
   olderr(debug.traceback(e,l))
-end
+end]]
 
 local init_cfg, err = filesystem.open("/etc/init.conf")
 if not init_cfg then
@@ -30,7 +30,7 @@ conf = conf()
 
 local function serror(err, lvl)
   if require("vt100").isHidden() then
-    io.write("\27[8m")
+    io.write("\27[0m")
   end
   io.write("\27[31m", debug.traceback(err, lvl), "\n\27[37m")
   os.kill(os.pid())
@@ -135,13 +135,13 @@ function computer.bootTime()
   }
 end
 
---logger.log("Starting login screen")
+logger.log("Starting login screen")
 
 require("event").push("init")
 
 while true do
   require("event").pull()
---[[  local loginRunning = false
+  local loginRunning = false
   for _, info in pairs(os.threads()) do
     if info.name == "/bin/login.lua" then
       loginRunning = true
@@ -153,5 +153,5 @@ while true do
       kernel.panic("login error: " .. err)
     end
     os.spawn(ok, "/bin/login.lua", function(err)logger.log("Login error:", err)end, {interrupt=true}, nil, "root")
-  end]]
+  end
 end

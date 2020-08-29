@@ -129,7 +129,8 @@ function vt100.emu(gpu) -- takes GPU component proxy *gpu* and returns a functio
                 local nfg,nbg = bg, fg
                 fg, bg = nfg, nbg
               elseif num == 8 then
-                hide = not hide
+                hide = false
+                ec = false
               elseif num > 29 and num < 38 then
                 fg = colours[num-29]
               elseif num > 39 and num < 48 then

@@ -1,4 +1,10 @@
-# Monolith
+# PSA: DO NOT USE THIS
+
+This is my first attempt at writing Monolith. It did *not* go even remotely well.
+
+This is an unmaintainable dumpster fire. Look at the code, maybe you'll be able to tell why I rewrote it.
+
+## Monolith
 
 Monolith is an extremely Linux-inspired operating system for the OpenComputers Minecraft mod.
 
